@@ -210,22 +210,12 @@ void BalanceFlipsideAudioProcessor::processBlock (AudioSampleBuffer& buffer, Mid
     wdlEngineL.Add (buffer.getArrayOfWritePointers(), buffer.getNumSamples(), 2);
     wdlEngineR.Add (buffer.getArrayOfWritePointers(), buffer.getNumSamples(), 2);
 
-    const float* inL = buffer.getReadPointer(0);
-    const float* inR = buffer.getReadPointer(1);
     float *outL = buffer.getWritePointer(0);
     float *outR = buffer.getWritePointer(1);
 
     // find number available samples for the engine
     int numAvailL = std::min (wdlEngineL.Avail(buffer.getNumSamples()), buffer.getNumSamples());
     int numAvailR = std::min (wdlEngineR.Avail(buffer.getNumSamples()), buffer.getNumSamples());
-
-    // If not enough samples are available yet, then only output the dry
-    // signal.
-    for (int i = 0; i < buffer.getNumSamples() - numAvailL; ++i)             // why -numAvail??
-    {
-        *outL++ = *inL++;
-        *outR++ = *inR++;
-    }
 
     // Output samples from the convolution engine.
     if (numAvailL > 0)
