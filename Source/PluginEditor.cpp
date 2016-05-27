@@ -1,3 +1,4 @@
+
 /*
   ==============================================================================
 
@@ -14,11 +15,14 @@
 
 //==============================================================================
 BalanceFlipsideAudioProcessorEditor::BalanceFlipsideAudioProcessorEditor (BalanceFlipsideAudioProcessor& p)
-    : AudioProcessorEditor (&p), processor (p)
+    : AudioProcessorEditor (&p),
+      img {ImageCache::getFromMemory (BinaryData::flipside_jpg,
+                                      BinaryData::flipside_jpgSize)},
+      processor (p)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (400, 300);
+    setSize (400, 400);
 }
 
 BalanceFlipsideAudioProcessorEditor::~BalanceFlipsideAudioProcessorEditor()
@@ -28,11 +32,7 @@ BalanceFlipsideAudioProcessorEditor::~BalanceFlipsideAudioProcessorEditor()
 //==============================================================================
 void BalanceFlipsideAudioProcessorEditor::paint (Graphics& g)
 {
-    g.fillAll (Colours::white);
-
-    g.setColour (Colours::black);
-    g.setFont (15.0f);
-    g.drawFittedText ("Hello World!", getLocalBounds(), Justification::centred, 1);
+    g.drawImage (img, 0, 0, 400, 400, 0, 0, 645, 645);
 }
 
 void BalanceFlipsideAudioProcessorEditor::resized()
