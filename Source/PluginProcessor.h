@@ -63,26 +63,26 @@ private:
     double playbackSampleRate {0.0};
     double impulseSampleRate {0.0};
 
-    WDL_ImpulseBuffer wdlImpulseL;
-    WDL_ImpulseBuffer wdlImpulseR;
-    WDL_ConvolutionEngine_Thread wdlEngineL;
+    ScopedPointer<AudioSampleBuffer> impulseJuceAudioSampleBufferL {nullptr};
+    ScopedPointer<AudioSampleBuffer> impulseJuceAudioSampleBufferR {nullptr};
+
+    WDL_ImpulseBuffer wdlImpulseL;              // these are stereo buffers!
+    WDL_ImpulseBuffer wdlImpulseR;              // e.g. ins =     stereo L R
+    WDL_ConvolutionEngine_Thread wdlEngineL;    //      out = 2 x stereo LL LR RL RR
     WDL_ConvolutionEngine_Thread wdlEngineR;
 
     static const int r8bBlockLength {64};
 
     ScopedPointer<r8b::CDSPResampler24> r8bResampler {nullptr};
 
-    ScopedPointer<AudioSampleBuffer> impulseJuceAudioSampleBufferL {nullptr};
-    ScopedPointer<AudioSampleBuffer> impulseJuceAudioSampleBufferR {nullptr};
-
     // Return resampling dest length
-    inline int resampleLength(int src_len, double src_srate, double dest_srate) const
+    inline int resampleLength(int sourceLen, double sourceRate, double destRate) const
     {
-        return int(dest_srate / src_srate * (double)src_len + 0.5);
+        return static_cast<int> (destRate / sourceRate * (double) sourceLen + 0.5);
     }
 
     template <class I, class O>
-    void resample (const I* src, int src_len, double src_srate, O* dest, int dest_len, double dest_srate);
+    void resample (const I* src, int sourceLen, double sourceRate, O* dest, int dest_len, double destRate);
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BalanceFlipsideAudioProcessor)

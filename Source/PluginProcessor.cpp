@@ -281,30 +281,35 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 //==============================================================================
 template <class I, class O>
-void BalanceFlipsideAudioProcessor::resample(const I* src, int src_len, double src_srate, O* dest, int dest_len, double dest_srate)
+void BalanceFlipsideAudioProcessor::resample(const I* source,
+                                             int sourceLen,
+                                             double sourceRate,
+                                             O* dest,
+                                             int destLen,
+                                             double destRate)
 {
-    if (dest_len == src_len)
+    if (destLen == sourceLen)
     {
         // Copy
-        for (int i = 0; i < dest_len; ++i) *dest++ = (O)*src++;
+        for (int i = 0; i < destLen; ++i) *dest++ = (O)*source++;
         return;
     }
 
     // Resample using r8brain-free-src.
-    double scale = src_srate / dest_srate;
-    while (dest_len > 0)
+    double scale = sourceRate / destRate;
+    while (destLen > 0)
     {
         double buf[r8bBlockLength], *p = buf;
         int n = r8bBlockLength;
-        if (n > src_len) n = src_len;
-        for (int i = 0; i < n; ++i) *p++ = (double)*src++;
+        if (n > sourceLen) n = sourceLen;
+        for (int i = 0; i < n; ++i) *p++ = (double)*source++;
         if (n < r8bBlockLength) memset(p, 0, (r8bBlockLength - n) * sizeof(double));
-        src_len -= n;
+        sourceLen -= n;
         
         n = r8bResampler->process(buf, r8bBlockLength, p);
-        if (n > dest_len) n = dest_len;
+        if (n > destLen) n = destLen;
         for (int i = 0; i < n; ++i) *dest++ = (O)(scale * *p++);
-        dest_len -= n;
+        destLen -= n;
     }
     
     r8bResampler->clear();
