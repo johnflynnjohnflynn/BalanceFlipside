@@ -9,9 +9,48 @@
               pluginProducesMidiOut="0" pluginIsMidiEffectPlugin="0" pluginEditorRequiresKeys="0"
               pluginAUExportPrefix="BalanceFlipsideAU" pluginRTASCategory=""
               aaxIdentifier="com.yourcompany.BalanceFlipside" pluginAAXCategory="AAX_ePlugInCategory_Dynamics"
-              jucerVersion="4.2.1">
+              jucerVersion="4.2.1" defines="WDL_CONVO_THREAD">
   <MAINGROUP id="w5W4YQ" name="BalanceFlipside">
+    <GROUP id="{CFA9E090-AFE4-5696-FAB7-2A05264597D1}" name="Resources">
+      <FILE id="y1vp1s" name="flipside-ts-L.wav" compile="0" resource="1"
+            file="Resources/flipside-ts-L.wav"/>
+      <FILE id="mu6LVW" name="flipside-ts-R.wav" compile="0" resource="1"
+            file="Resources/flipside-ts-R.wav"/>
+    </GROUP>
     <GROUP id="{CA0E8932-F55D-9FFB-D12A-FDFF1F614BEA}" name="Source">
+      <GROUP id="{E5F42D8E-EBFB-0935-F8FA-9DF9A065DC81}" name="r8brain-free-src">
+        <FILE id="VwwKof" name="CDSPBlockConvolver.h" compile="0" resource="0"
+              file="Source/r8brain-free-src/CDSPBlockConvolver.h"/>
+        <FILE id="kKt2AN" name="CDSPFIRFilter.h" compile="0" resource="0" file="Source/r8brain-free-src/CDSPFIRFilter.h"/>
+        <FILE id="ESD20L" name="CDSPFracInterpolator.h" compile="0" resource="0"
+              file="Source/r8brain-free-src/CDSPFracInterpolator.h"/>
+        <FILE id="LU3aRQ" name="CDSPProcessor.h" compile="0" resource="0" file="Source/r8brain-free-src/CDSPProcessor.h"/>
+        <FILE id="x1M8Pi" name="CDSPRealFFT.h" compile="0" resource="0" file="Source/r8brain-free-src/CDSPRealFFT.h"/>
+        <FILE id="PmEWwQ" name="CDSPResampler.h" compile="0" resource="0" file="Source/r8brain-free-src/CDSPResampler.h"/>
+        <FILE id="OtirXr" name="CDSPSincFilterGen.h" compile="0" resource="0"
+              file="Source/r8brain-free-src/CDSPSincFilterGen.h"/>
+        <FILE id="CeNwXN" name="fft4g.h" compile="0" resource="0" file="Source/r8brain-free-src/fft4g.h"/>
+        <FILE id="f20NTH" name="r8bbase.cpp" compile="1" resource="0" file="Source/r8brain-free-src/r8bbase.cpp"/>
+        <FILE id="y4ZvhR" name="r8bbase.h" compile="0" resource="0" file="Source/r8brain-free-src/r8bbase.h"/>
+        <FILE id="lLU8C4" name="r8bconf.h" compile="0" resource="0" file="Source/r8brain-free-src/r8bconf.h"/>
+        <FILE id="gT2dAe" name="r8butil.h" compile="0" resource="0" file="Source/r8brain-free-src/r8butil.h"/>
+      </GROUP>
+      <GROUP id="{0FE00690-6034-327B-6908-8764B4249671}" name="WDL">
+        <GROUP id="{FB1ED90F-E803-5BEC-3D59-270A001E3150}" name="WDL">
+          <FILE id="Zsc9ad" name="convoengine.cpp" compile="1" resource="0" file="Source/WDL/WDL/convoengine.cpp"/>
+          <FILE id="BBWEON" name="convoengine.h" compile="0" resource="0" file="Source/WDL/WDL/convoengine.h"/>
+          <FILE id="M95E3y" name="denormal.h" compile="0" resource="0" file="Source/WDL/WDL/denormal.h"/>
+          <FILE id="ZZN9Mn" name="fastqueue.h" compile="0" resource="0" file="Source/WDL/WDL/fastqueue.h"/>
+          <FILE id="Vp2I86" name="fft.c" compile="1" resource="0" file="Source/WDL/WDL/fft.c"/>
+          <FILE id="xeDHyw" name="fft.h" compile="0" resource="0" file="Source/WDL/WDL/fft.h"/>
+          <FILE id="lt93h8" name="heapbuf.h" compile="0" resource="0" file="Source/WDL/WDL/heapbuf.h"/>
+          <FILE id="CPWDfo" name="ptrlist.h" compile="0" resource="0" file="Source/WDL/WDL/ptrlist.h"/>
+          <FILE id="HaiVwD" name="queue.h" compile="0" resource="0" file="Source/WDL/WDL/queue.h"/>
+          <FILE id="NbNRD0" name="resample.cpp" compile="1" resource="0" file="Source/WDL/WDL/resample.cpp"/>
+          <FILE id="k1SVoY" name="resample.h" compile="0" resource="0" file="Source/WDL/WDL/resample.h"/>
+          <FILE id="YQgjVh" name="wdltypes.h" compile="0" resource="0" file="Source/WDL/WDL/wdltypes.h"/>
+        </GROUP>
+      </GROUP>
       <FILE id="tFYakY" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="RQIiRv" name="PluginProcessor.h" compile="0" resource="0"

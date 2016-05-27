@@ -13,6 +13,9 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+#include "WDL/WDL/convoengine.h"    // Tale edition of WDL for threaded conv
+#include "r8brain-free-src/CDSPResampler.h"
+
 
 //==============================================================================
 /**
@@ -56,7 +59,27 @@ public:
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    // Returns destination length
+    inline int ResampleLength(int src_len, double src_srate, double dest_srate) const
+    {
+        return int(dest_srate / src_srate * (double)src_len + 0.5);
+    }
+
+    template <class I, class O> void Resample(const I* src, int src_len, double src_srate, O* dest, int dest_len, double dest_srate);
+
 private:
+    double sampleRate;
+    double impulseSampleRate;
+
+    WDL_ImpulseBuffer wdlImpulse;
+    WDL_ConvolutionEngine_Thread wdlEngine;
+
+    static const int blockLength = 64;
+
+    r8b::CDSPResampler24* r8bResampler;                                         // remove pointer?
+
+    ScopedPointer<AudioSampleBuffer> impulseJuceAudioSampleBuffer;
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BalanceFlipsideAudioProcessor)
 };
