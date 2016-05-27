@@ -281,7 +281,8 @@ void BalanceFlipsideAudioProcessor::resample(const I* source,
     if (destLen == sourceLen)
     {
         // Copy
-        for (int i = 0; i < destLen; ++i) *dest++ = (O)*source++;
+        for (int i = 0; i < destLen; ++i)
+            *dest++ = static_cast<O> (*source++);
         return;
     }
 
@@ -289,16 +290,24 @@ void BalanceFlipsideAudioProcessor::resample(const I* source,
     double scale = sourceRate / destRate;
     while (destLen > 0)
     {
-        double buf[r8bBlockLength], *p = buf;
+        double buf[r8bBlockLength];
+        double* p = buf;
         int n = r8bBlockLength;
-        if (n > sourceLen) n = sourceLen;
-        for (int i = 0; i < n; ++i) *p++ = (double)*source++;
-        if (n < r8bBlockLength) memset(p, 0, (r8bBlockLength - n) * sizeof(double));
+
+        if (n > sourceLen)
+            n = sourceLen;
+
+        for (int i = 0; i < n; ++i)
+            *p++ = static_cast<double> (*source++);               // copy source to buf
+        if (n < r8bBlockLength)
+            memset (p, 0, (r8bBlockLength - n) * sizeof(double)); // fill with zeroes
         sourceLen -= n;
         
-        n = r8bResampler->process(buf, r8bBlockLength, p);
-        if (n > destLen) n = destLen;
-        for (int i = 0; i < n; ++i) *dest++ = (O)(scale * *p++);
+        n = r8bResampler->process (buf, r8bBlockLength, p);       // process() returns
+        if (n > destLen)                                          // size of output buffer
+            n = destLen;
+        for (int i = 0; i < n; ++i)
+            *dest++ = static_cast<O> (scale * *p++);              // scale back to unity
         destLen -= n;
     }
     
