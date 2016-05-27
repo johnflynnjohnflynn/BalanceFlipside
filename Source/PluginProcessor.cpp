@@ -15,6 +15,17 @@
 //==============================================================================
 BalanceFlipsideAudioProcessor::BalanceFlipsideAudioProcessor()
 {
+    // Put WAV impulses into Juce AudioFormatReader
+    WavAudioFormat wav;
+    MemoryInputStream* mis {new MemoryInputStream {BinaryData::flipsidetsL_wav, BinaryData::flipsidetsL_wavSize, false}};
+    ScopedPointer<AudioFormatReader> audioReader {wav.createReaderFor (mis, true)};
+
+    // Put AudioFormatReader into our IR AudioSampleBuffer
+    impulseJuceAudioSampleBuffer = new AudioSampleBuffer (audioReader->numChannels, audioReader->lengthInSamples + 4);
+    audioReader->read (impulseJuceAudioSampleBuffer, 0, audioReader->lengthInSamples + 4, 0, true, true); // not sure why 4 samples? interp?
+    impulseSampleRate = audioReader->sampleRate;
+
+    wdlEngine.EnableThread(true);
 }
 
 BalanceFlipsideAudioProcessor::~BalanceFlipsideAudioProcessor()
