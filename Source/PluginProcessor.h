@@ -81,8 +81,8 @@ private:
         return static_cast<int> (destRate / sourceRate * (double) sourceLen + 0.5);
     }
 
-    template <class I, class O>
-    void resample (const I* src, int sourceLen, double sourceRate, O* dest, int dest_len, double destRate);
+    template <class floatType>
+    void resample (const floatType* src, int sourceLen, double sourceRate, floatType* dest, int dest_len, double destRate);
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BalanceFlipsideAudioProcessor)

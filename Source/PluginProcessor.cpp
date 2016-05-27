@@ -270,11 +270,11 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 }
 
 //==============================================================================
-template <class I, class O>
-void BalanceFlipsideAudioProcessor::resample(const I* source,
+template <class floatType>
+void BalanceFlipsideAudioProcessor::resample(const floatType* source,
                                              int sourceLen,
                                              double sourceRate,
-                                             O* dest,
+                                             floatType* dest,
                                              int destLen,
                                              double destRate)
 {
@@ -282,7 +282,7 @@ void BalanceFlipsideAudioProcessor::resample(const I* source,
     {
         // Copy
         for (int i = 0; i < destLen; ++i)
-            *dest++ = static_cast<O> (*source++);
+            *dest++ = static_cast<floatType> (*source++);
         return;
     }
 
@@ -307,7 +307,7 @@ void BalanceFlipsideAudioProcessor::resample(const I* source,
         if (n > destLen)                                          // size of output buffer
             n = destLen;
         for (int i = 0; i < n; ++i)
-            *dest++ = static_cast<O> (scale * *p++);              // scale back to unity
+            *dest++ = static_cast<floatType> (scale * *p++);      // scale back to unity
         destLen -= n;
     }
     
