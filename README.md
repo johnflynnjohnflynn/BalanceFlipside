@@ -11,7 +11,8 @@ Features:
 - True-stereo convolution
 - Zero-latency convolution
 - Low CPU usage
+- Sample rate conversion of IR handled automatically
 
-Uses Tale's threaded version of the Cockos WDL convolution engine to minimise CPU cost. WDL library allows zero-latency convolution which is a nice plus. Aleksey Vaneev (Voxengo) provides the high quality r8brain sample rate conversion library which performs sample rate conversion of the impulse if required.
+Uses Tale's threaded version of the Cockos WDL convolution engine to minimise CPU cost. WDL library allows zero-latency convolution which is a nice plus. Aleksey Vaneev's (Voxengo) high quality r8brain sample rate conversion library performs sample rate conversion of the impulse if required.
 
 See [www.johnflynn.info](http://www.johnflynn.info/)
