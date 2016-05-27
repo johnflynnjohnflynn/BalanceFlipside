@@ -63,8 +63,10 @@ private:
     double playbackSampleRate {0.0};
     double impulseSampleRate {0.0};
 
-    WDL_ImpulseBuffer wdlImpulse;
-    WDL_ConvolutionEngine_Thread wdlEngine;
+    WDL_ImpulseBuffer wdlImpulseL;
+    WDL_ImpulseBuffer wdlImpulseR;
+    WDL_ConvolutionEngine_Thread wdlEngineL;
+    WDL_ConvolutionEngine_Thread wdlEngineR;
 
     static const int r8bBlockLength {64};
 
@@ -73,7 +75,7 @@ private:
     ScopedPointer<AudioSampleBuffer> impulseJuceAudioSampleBufferL {nullptr};
     ScopedPointer<AudioSampleBuffer> impulseJuceAudioSampleBufferR {nullptr};
 
-    // Return destination length
+    // Return resampling dest length
     inline int resampleLength(int src_len, double src_srate, double dest_srate) const
     {
         return int(dest_srate / src_srate * (double)src_len + 0.5);

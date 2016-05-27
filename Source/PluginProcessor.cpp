@@ -15,6 +15,8 @@
 //==============================================================================
 BalanceFlipsideAudioProcessor::BalanceFlipsideAudioProcessor()
 {
+    // Remember ...L&R are stereo files corresponding to true stereo output for left/right inputs
+
     // Put WAV impulses into Juce AudioFormatReaders
     WavAudioFormat wav;
     MemoryInputStream* misL {new MemoryInputStream {BinaryData::flipsidetsL_wav, BinaryData::flipsidetsL_wavSize, false}};
@@ -28,10 +30,11 @@ BalanceFlipsideAudioProcessor::BalanceFlipsideAudioProcessor()
     audioReaderL->read (impulseJuceAudioSampleBufferL, 0, audioReaderL->lengthInSamples + 4, 0, true, true);
     audioReaderR->read (impulseJuceAudioSampleBufferR, 0, audioReaderR->lengthInSamples + 4, 0, true, true);
 
-    jassert (audioReaderL->sampleRate == audioReaderR->sampleRate); // sanity
-    impulseSampleRate = audioReaderR->sampleRate;
+    jassert (audioReaderL->sampleRate == audioReaderR->sampleRate); // TS L and TS R file should be same rate
+    impulseSampleRate = audioReaderL->sampleRate;
 
-    wdlEngine.EnableThread(true);
+    wdlEngineL.EnableThread(true);
+    wdlEngineR.EnableThread(true);
 }
 
 BalanceFlipsideAudioProcessor::~BalanceFlipsideAudioProcessor()
@@ -94,41 +97,59 @@ void BalanceFlipsideAudioProcessor::changeProgramName (int index, const String& 
 //==============================================================================
 void BalanceFlipsideAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Detect a change in sample rate.
+    // First time and any time sample rate changes, re-initialise.
     if (playbackSampleRate != sampleRate)
     {
         playbackSampleRate = sampleRate;
 
-        wdlImpulse.SetNumChannels(2);
+        wdlImpulseL.SetNumChannels(2);  // doesn't seem to allow 4 channel
+        wdlImpulseR.SetNumChannels(2);
 
         if (r8bResampler) delete r8bResampler;                                                              // is this safe?
         r8bResampler = new r8b::CDSPResampler24 {impulseSampleRate, playbackSampleRate, r8bBlockLength};
 
-        // Resample the impulse response.
-        jassert (impulseJuceAudioSampleBufferL->getNumSamples() == impulseJuceAudioSampleBufferR->getNumSamples());
-        int len = resampleLength (impulseJuceAudioSampleBufferL->getNumSamples(), impulseSampleRate, playbackSampleRate);
-        wdlImpulse.SetLength (len);
-        if (len)
+        // Resample the impulse responses.
+        int lenL = resampleLength (impulseJuceAudioSampleBufferL->getNumSamples(), impulseSampleRate, playbackSampleRate);
+        wdlImpulseL.SetLength (lenL);
+        if (lenL)
         {
             resample (impulseJuceAudioSampleBufferL->getReadPointer(0),
                       impulseJuceAudioSampleBufferL->getNumSamples(),
                       impulseSampleRate,
-                      wdlImpulse.impulses[0].Get(),
-                      len,
+                      wdlImpulseL.impulses[0].Get(),
+                      lenL,
                       playbackSampleRate);
+            resample (impulseJuceAudioSampleBufferL->getReadPointer(1),
+                      impulseJuceAudioSampleBufferL->getNumSamples(),
+                      impulseSampleRate,
+                      wdlImpulseL.impulses[1].Get(),
+                      lenL,
+                      playbackSampleRate);
+        }
+        int lenR = resampleLength (impulseJuceAudioSampleBufferR->getNumSamples(), impulseSampleRate, playbackSampleRate);
+        wdlImpulseR.SetLength (lenR);
+        if (lenR)
+        {
             resample (impulseJuceAudioSampleBufferR->getReadPointer(0),
                       impulseJuceAudioSampleBufferR->getNumSamples(),
                       impulseSampleRate,
-                      wdlImpulse.impulses[1].Get(),
-                      len,
+                      wdlImpulseR.impulses[0].Get(),
+                      lenR,
+                      playbackSampleRate);
+            resample (impulseJuceAudioSampleBufferR->getReadPointer(1),
+                      impulseJuceAudioSampleBufferR->getNumSamples(),
+                      impulseSampleRate,
+                      wdlImpulseR.impulses[1].Get(),
+                      lenR,
                       playbackSampleRate);
         }
 
-        // Tie the impulse response to the convolution engine.
-        wdlEngine.SetImpulse(&wdlImpulse);
+        // Tie the impulse responses to the convolution engines.
+        wdlEngineL.SetImpulse (&wdlImpulseL);
+        wdlEngineR.SetImpulse (&wdlImpulseR);
     }
 
-    printf("Latency %i Samples\n", wdlEngine.GetLatency());
+    //printf("Latency %i Samples\n", wdlEngineL.GetLatency());
 }
 
 void BalanceFlipsideAudioProcessor::releaseResources()
@@ -186,7 +207,8 @@ void BalanceFlipsideAudioProcessor::processBlock (AudioSampleBuffer& buffer, Mid
     }*/
 
     // Send input samples to the convolution engine.
-    wdlEngine.Add (buffer.getArrayOfWritePointers(), buffer.getNumSamples(), 2);
+    wdlEngineL.Add (buffer.getArrayOfWritePointers(), buffer.getNumSamples(), 2);
+    wdlEngineR.Add (buffer.getArrayOfWritePointers(), buffer.getNumSamples(), 2);
 
     const float* inL = buffer.getReadPointer(0);
     const float* inR = buffer.getReadPointer(1);
@@ -194,30 +216,34 @@ void BalanceFlipsideAudioProcessor::processBlock (AudioSampleBuffer& buffer, Mid
     float *outR = buffer.getWritePointer(1);
 
     // find number available samples for the engine
-    int numAvail = std::min (wdlEngine.Avail(buffer.getNumSamples()), buffer.getNumSamples());
+    int numAvailL = std::min (wdlEngineL.Avail(buffer.getNumSamples()), buffer.getNumSamples());
+    int numAvailR = std::min (wdlEngineR.Avail(buffer.getNumSamples()), buffer.getNumSamples());
 
     // If not enough samples are available yet, then only output the dry
     // signal.
-    for (int i = 0; i < buffer.getNumSamples() - numAvail; ++i)             // why -numAvail??
+    for (int i = 0; i < buffer.getNumSamples() - numAvailL; ++i)             // why -numAvail??
     {
         *outL++ = *inL++;
         *outR++ = *inR++;
     }
 
     // Output samples from the convolution engine.
-    if (numAvail > 0)
+    if (numAvailL > 0)
     {
-        // Apply the convolution
-        WDL_FFT_REAL* convoL = wdlEngine.Get()[0];
-        WDL_FFT_REAL* convoR = wdlEngine.Get()[1];
-        for (int i = 0; i < numAvail; ++i)
+        // Apply the true stereo convolution (in L R -> out LL LR RL RR)
+        WDL_FFT_REAL* convoLL = wdlEngineL.Get()[0];
+        WDL_FFT_REAL* convoLR = wdlEngineL.Get()[1];
+        WDL_FFT_REAL* convoRL = wdlEngineR.Get()[0];
+        WDL_FFT_REAL* convoRR = wdlEngineR.Get()[1];
+        for (int i = 0; i < numAvailL; ++i)
         {
-            *outL++ = *convoL++;                         // convoluted only
-            *outR++ = *convoR++;
+            *outL++ = *convoLL++ + *convoRL++;        // convolved only, no dry
+            *outR++ = *convoLR++ + *convoRR++;
         }
 
         // Remove the sample block from the convolution engine's buffer.
-        wdlEngine.Advance(numAvail);
+        wdlEngineL.Advance(numAvailL);
+        wdlEngineR.Advance(numAvailR);
     }
 }
 
