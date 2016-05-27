@@ -88,8 +88,32 @@ void BalanceFlipsideAudioProcessor::changeProgramName (int index, const String& 
 //==============================================================================
 void BalanceFlipsideAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    // Detect a change in sample rate.
+    if (playbackSampleRate != sampleRate)
+    {
+        playbackSampleRate = sampleRate;
+
+        wdlImpulse.SetNumChannels(1);
+
+        if (r8bResampler) delete r8bResampler;
+        r8bResampler = new r8b::CDSPResampler24 {impulseSampleRate, playbackSampleRate, r8bBlockLength};
+
+        // Resample the impulse response.
+        int len = resampleLength (impulseJuceAudioSampleBuffer->getNumSamples(), impulseSampleRate, playbackSampleRate);
+        wdlImpulse.SetLength (len);
+        if (len)
+            resample (impulseJuceAudioSampleBuffer->getReadPointer(0),
+                      impulseJuceAudioSampleBuffer->getNumSamples(),
+                      impulseSampleRate,
+                      wdlImpulse.impulses[0].Get(),
+                      len,
+                      playbackSampleRate);
+
+        // Tie the impulse response to the convolution engine.
+        wdlEngine.SetImpulse(&wdlImpulse);
+    }
+
+    printf("Latency %i Samples\n", wdlEngine.GetLatency());
 }
 
 void BalanceFlipsideAudioProcessor::releaseResources()
@@ -139,11 +163,38 @@ void BalanceFlipsideAudioProcessor::processBlock (AudioSampleBuffer& buffer, Mid
 
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    /*for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         float* channelData = buffer.getWritePointer (channel);
 
         // ..do something to the data...
+    }*/
+
+    // Send input samples to the convolution engine.
+    wdlEngine.Add (buffer.getArrayOfWritePointers(), buffer.getNumSamples(), 1);
+
+    const float* in = buffer.getReadPointer(0);
+    float *out_l = buffer.getWritePointer(0);
+    float *out_r = buffer.getWritePointer(1);
+
+    // find number available samples for the engine
+    int numAvail = std::min (wdlEngine.Avail(buffer.getNumSamples()), buffer.getNumSamples());
+
+    // If not enough samples are available yet, then only output the dry
+    // signal.
+    for (int i = 0; i < buffer.getNumSamples() - numAvail; ++i)             // why -numAvail??
+        *out_l++ = *out_r++ = *in++;                                        // mono summed
+
+    // Output samples from the convolution engine.
+    if (numAvail > 0)
+    {
+        // Apply the dry/wet mix
+        WDL_FFT_REAL* convo = wdlEngine.Get()[0];
+        for (int i = 0; i < numAvail; ++i)
+            *out_l++ = *out_r++ = *in++ + *convo++;                         // dry and convoluted
+
+        // Remove the sample block from the convolution engine's buffer.
+        wdlEngine.Advance(numAvail);
     }
 }
 
@@ -177,4 +228,35 @@ void BalanceFlipsideAudioProcessor::setStateInformation (const void* data, int s
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new BalanceFlipsideAudioProcessor();
+}
+
+//==============================================================================
+template <class I, class O>
+void BalanceFlipsideAudioProcessor::resample(const I* src, int src_len, double src_srate, O* dest, int dest_len, double dest_srate)
+{
+    if (dest_len == src_len)
+    {
+        // Copy
+        for (int i = 0; i < dest_len; ++i) *dest++ = (O)*src++;
+        return;
+    }
+
+    // Resample using r8brain-free-src.
+    double scale = src_srate / dest_srate;
+    while (dest_len > 0)
+    {
+        double buf[r8bBlockLength], *p = buf;
+        int n = r8bBlockLength;
+        if (n > src_len) n = src_len;
+        for (int i = 0; i < n; ++i) *p++ = (double)*src++;
+        if (n < r8bBlockLength) memset(p, 0, (r8bBlockLength - n) * sizeof(double));
+        src_len -= n;
+        
+        n = r8bResampler->process(buf, r8bBlockLength, p);
+        if (n > dest_len) n = dest_len;
+        for (int i = 0; i < n; ++i) *dest++ = (O)(scale * *p++);
+        dest_len -= n;
+    }
+    
+    r8bResampler->clear();
 }
