@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="PVURG9" name="BalanceFlipside" projectType="audioplug" version="1.0.0"
-              bundleIdentifier="com.yourcompany.BalanceFlipside" includeBinaryInAppConfig="1"
+<JUCERPROJECT id="PVURG9" name="BalanceFlipside" projectType="audioplug" version="0.0.1"
+              bundleIdentifier="com.BalanceMastering.BalanceFlipside" includeBinaryInAppConfig="1"
               buildVST="1" buildVST3="0" buildAU="1" buildAUv3="0" buildRTAS="0"
               buildAAX="0" pluginName="BalanceFlipside" pluginDesc="BalanceFlipside"
-              pluginManufacturer="yourcompany" pluginManufacturerCode="Manu"
-              pluginCode="Pvur" pluginChannelConfigs="" pluginIsSynth="0" pluginWantsMidiIn="0"
-              pluginProducesMidiOut="0" pluginIsMidiEffectPlugin="0" pluginEditorRequiresKeys="0"
-              pluginAUExportPrefix="BalanceFlipsideAU" pluginRTASCategory=""
-              aaxIdentifier="com.yourcompany.BalanceFlipside" pluginAAXCategory="AAX_ePlugInCategory_Dynamics"
-              jucerVersion="4.2.1" defines="WDL_CONVO_THREAD">
+              pluginManufacturer="BalanceMastering" pluginManufacturerCode="BaMa"
+              pluginCode="BaFl" pluginChannelConfigs="{2,2}" pluginIsSynth="0"
+              pluginWantsMidiIn="0" pluginProducesMidiOut="0" pluginIsMidiEffectPlugin="0"
+              pluginEditorRequiresKeys="0" pluginAUExportPrefix="BalanceFlipsideAU"
+              pluginRTASCategory="" aaxIdentifier="com.BalanceMastering.BalanceFlipside"
+              pluginAAXCategory="AAX_ePlugInCategory_Dynamics" jucerVersion="4.2.1"
+              defines="WDL_CONVO_THREAD" companyName="BalanceMastering" companyWebsite="www.BalanceMastering.com"
+              companyEmail="contact@balancemastering.com">
   <MAINGROUP id="w5W4YQ" name="BalanceFlipside">
     <GROUP id="{CFA9E090-AFE4-5696-FAB7-2A05264597D1}" name="Resources">
       <FILE id="y1vp1s" name="flipside-ts-L.wav" compile="0" resource="1"
