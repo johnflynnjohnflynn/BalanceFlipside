@@ -70,7 +70,8 @@ private:
 
     ScopedPointer<r8b::CDSPResampler24> r8bResampler {nullptr};
 
-    ScopedPointer<AudioSampleBuffer> impulseJuceAudioSampleBuffer {nullptr};
+    ScopedPointer<AudioSampleBuffer> impulseJuceAudioSampleBufferL {nullptr};
+    ScopedPointer<AudioSampleBuffer> impulseJuceAudioSampleBufferR {nullptr};
 
     // Return destination length
     inline int resampleLength(int src_len, double src_srate, double dest_srate) const
